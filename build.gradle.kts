@@ -9,9 +9,9 @@ group = "pt.nova.fct.iot"
 version = "0.0.1-SNAPSHOT"
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+	//toolchain {
+	//	languageVersion = JavaLanguageVersion.of(21)
+	//}
 }
 
 repositories {
@@ -39,6 +39,8 @@ dependencies {
 	testImplementation("org.testcontainers:testcontainers-junit-jupiter")
 	testImplementation("org.testcontainers:testcontainers-postgresql")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	implementation("org.mapstruct:mapstruct:1.7.0.Beta1")
 }
 
 kotlin {
