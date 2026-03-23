@@ -15,7 +15,7 @@ import pt.nova.fct.iot.configserver.service.IotService
 
 
 @RestController
-@RequestMapping("/iot")
+@RequestMapping("/api/iot")
 class IotClientController (
     private val iotService: IotService,
 ) {

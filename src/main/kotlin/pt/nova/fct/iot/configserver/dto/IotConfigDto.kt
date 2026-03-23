@@ -1,3 +1,5 @@
 package pt.nova.fct.iot.configserver.dto
 
-data class IotConfigDto()
+data class IotConfigDto(
+    val id: String,
+)

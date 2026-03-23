@@ -1,8 +1,10 @@
 plugins {
 	kotlin("jvm") version "2.2.21"
 	kotlin("plugin.spring") version "2.2.21"
+	kotlin("kapt") version "2.2.21"
 	id("org.springframework.boot") version "4.0.4"
 	id("io.spring.dependency-management") version "1.1.7"
+	id("com.google.devtools.ksp") version "2.3.6"
 }
 
 group = "pt.nova.fct.iot"
@@ -41,6 +43,7 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 	implementation("org.mapstruct:mapstruct:1.7.0.Beta1")
+	kapt("org.mapstruct:mapstruct-processor:1.7.0.Beta1")
 }
 
 kotlin {
