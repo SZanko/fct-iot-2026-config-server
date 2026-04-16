@@ -13,12 +13,20 @@ class IotService(
 ) {
 
     fun findConfigById(id: String): IotConfigDto {
-        val result =  configRepo.findById(id = id)
+        val result =  configRepo.findById(id)
 
         if(result.isPresent) {
             throw IotConfigNotFoundException()
         }
 
         return configMapper.toDto(result.get())
+    }
+
+    fun createNewConfig(config: IotConfigDto): IotConfigDto {
+        val toCreated = configMapper.toModel(config)
+
+        val result = configRepo.save(toCreated);
+
+        return configMapper.toDto(result)
     }
 }
