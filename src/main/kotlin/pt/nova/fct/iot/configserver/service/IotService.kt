@@ -1,5 +1,6 @@
 package pt.nova.fct.iot.configserver.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import pt.nova.fct.iot.configserver.dto.IotConfigDto
 import pt.nova.fct.iot.configserver.mapper.IotConfigMapper
@@ -12,10 +13,15 @@ class IotService(
     private val configMapper: IotConfigMapper,
 ) {
 
-    fun findConfigById(id: String): IotConfigDto {
-        val result =  configRepo.findById(id)
+    companion object {
+        private val log = LoggerFactory.getLogger(this::class.java)
+    }
 
-        if(result.isPresent) {
+    fun findConfigById(id: String): IotConfigDto {
+        val result = configRepo.findById(id)
+
+        if (result.isEmpty) {
+            log.warn("Config with id '$id' was not found")
             throw IotConfigNotFoundException()
         }
 

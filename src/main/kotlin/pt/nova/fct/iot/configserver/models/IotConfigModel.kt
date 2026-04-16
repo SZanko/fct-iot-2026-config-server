@@ -1,7 +1,11 @@
 package pt.nova.fct.iot.configserver.models
 
-import org.springframework.data.annotation.Id
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 
+@Entity
+@Table(name = "config")
 data class IotConfigModel(
     @field:Id
     val id : String,
