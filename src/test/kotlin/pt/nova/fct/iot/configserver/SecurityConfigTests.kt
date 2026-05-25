@@ -33,7 +33,7 @@ class SecurityConfigTests(
 
     @Test
     fun `iot config lookup is public and does not send a basic challenge`() {
-        `when`(iotService.findConfigById("2")).thenReturn(IotConfigDto("2"))
+        `when`(iotService.findConfigById("2")).thenReturn(IotConfigDto(id = "2", name = "Test", light = 100, temperature = 20))
 
         mockMvc.perform(get("/api/iot/2").accept(MediaType.ALL))
             .andExpect(status().isOk())

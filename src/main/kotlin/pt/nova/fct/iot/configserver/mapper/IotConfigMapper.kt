@@ -8,6 +8,8 @@ import pt.nova.fct.iot.configserver.models.IotConfigModel
 private object ModelToDtoMapper : ObjectMappie<IotConfigModel, IotConfigDto>() {
     override fun map(from: IotConfigModel) = mapping {
         to::name fromValue ""
+        to::light fromValue from.ldrLimit
+        to::temperature fromValue from.temperature
     }
 }
 

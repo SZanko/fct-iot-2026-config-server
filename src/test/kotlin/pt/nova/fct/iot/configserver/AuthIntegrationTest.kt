@@ -43,7 +43,7 @@ class AuthIntegrationTest(
                 password = passwordEncoder.encode("secret")!!,
             )
         )
-        iotConfigRepo.save(IotConfigModel(id = "device-1", busStopId = "stop-42", ldrLimit = 512))
+        iotConfigRepo.save(IotConfigModel(id = "device-1", busStopId = "stop-42", ldrLimit = 512, temperature = 20))
     }
 
     @Test

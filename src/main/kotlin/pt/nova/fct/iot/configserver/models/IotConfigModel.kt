@@ -6,9 +6,10 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "config")
-data class IotConfigModel(
+class IotConfigModel(
     @field:Id
-    val id : String,
-    val busStopId: String,
-    val ldrLimit: Int,
+    var id : String,
+    var busStopId: String,
+    var ldrLimit: Int,
+    var temperature: Int,
 )
