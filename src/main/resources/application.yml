@@ -9,3 +9,16 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+  datasource:
+    url: ${IOT_DB_URL:jdbc:mysql://localhost:3309/iotDatabase?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}
+    username: ${IOT_DB_USERNAME:iot-user}
+    password: ${IOT_DB_PASSWORD:secret}
+    driver-class-name: org.postgresql.Driver
+
+
+app:
+  security:
+    jwt:
+      # 256-bit base64 secret — change this in production!
+      secret: dGhpcy1pcy1hLXZlcnktbG9uZy1zZWNyZXQta2V5LWZvci1qd3QtYXV0aA==
+      expiration-ms: 86400000 # 24 hours

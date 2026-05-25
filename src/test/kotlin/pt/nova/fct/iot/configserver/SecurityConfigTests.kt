@@ -18,15 +18,18 @@ import pt.nova.fct.iot.configserver.controller.IotClientController
 import pt.nova.fct.iot.configserver.dto.IotConfigDto
 import pt.nova.fct.iot.configserver.service.IotService
 import pt.nova.fct.iot.configserver.service.exceptions.IotConfigNotFoundException
+import pt.nova.fct.iot.configserver.service.security.JwtService
 import pt.nova.fct.iot.configserver.service.security.SecurityConfig
+import pt.nova.fct.iot.configserver.service.security.UserDetailsServiceImpl
 
 @WebMvcTest(IotClientController::class)
 @Import(SecurityConfig::class)
 class SecurityConfigTests(
     @Autowired private val mockMvc: MockMvc,
 ) {
-    @MockitoBean
-    private lateinit var iotService: IotService
+    @MockitoBean private lateinit var iotService: IotService
+    @MockitoBean private lateinit var jwtService: JwtService
+    @MockitoBean private lateinit var userDetailsService: UserDetailsServiceImpl
 
     @Test
     fun `iot config lookup is public and does not send a basic challenge`() {
@@ -57,13 +60,13 @@ class SecurityConfigTests(
     }
 
     @Test
-    fun `protected requests do not send a basic challenge`() {
+    fun `protected requests without token return unauthorized without a basic challenge`() {
         mockMvc.perform(
             post("/api/iot")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""{"id":"2"}"""),
         )
-            .andExpect(status().isForbidden())
+            .andExpect(status().isUnauthorized())
             .andExpect(header().doesNotExist(HttpHeaders.WWW_AUTHENTICATE))
     }
 }

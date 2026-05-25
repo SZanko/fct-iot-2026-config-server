@@ -3,6 +3,7 @@ package pt.nova.fct.iot.configserver.controller
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.security.SecurityRequirements
 import jakarta.annotation.security.PermitAll
 import jakarta.websocket.server.PathParam
 import org.springframework.http.ResponseEntity
@@ -21,6 +22,7 @@ import pt.nova.fct.iot.configserver.service.IotService
 class IotClientController (
     private val iotService: IotService,
 ) {
+    @SecurityRequirements
     @Operation(summary = "Get the Config for microcontroller")
     @ApiResponses(
         value = [
