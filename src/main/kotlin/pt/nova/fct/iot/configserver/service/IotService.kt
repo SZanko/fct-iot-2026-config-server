@@ -1,6 +1,7 @@
 package pt.nova.fct.iot.configserver.service
 
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import pt.nova.fct.iot.configserver.dto.IotConfigDto
 import pt.nova.fct.iot.configserver.mapper.IotConfigMapper
@@ -18,7 +19,7 @@ class IotService(
     }
 
     fun findConfigById(id: String): IotConfigDto {
-        val result = configRepo.findById(id)
+        val result = configRepo.findByBusStopId(id)
 
         if (result.isEmpty) {
             log.warn("Config with id '$id' was not found")
@@ -32,6 +33,13 @@ class IotService(
         val toCreated = configMapper.toModel(config)
 
         val result = configRepo.save(toCreated);
+
+        return configMapper.toDto(result)
+    }
+
+    fun findConfigs(page: Int, size: Int): List<IotConfigDto> {
+        val page = Pageable.ofSize(size).withPage(page)
+        val result = configRepo.findAll(page).toList()
 
         return configMapper.toDto(result)
     }

@@ -1,5 +1,6 @@
 package pt.nova.fct.iot.configserver.mapper
 
+import org.springframework.data.domain.Page
 import org.springframework.stereotype.Component
 import tech.mappie.api.ObjectMappie
 import pt.nova.fct.iot.configserver.dto.IotConfigDto
@@ -7,16 +8,23 @@ import pt.nova.fct.iot.configserver.models.IotConfigModel
 
 private object ModelToDtoMapper : ObjectMappie<IotConfigModel, IotConfigDto>() {
     override fun map(from: IotConfigModel) = mapping {
-        to::name fromValue ""
+        to::name fromValue from.name
         to::light fromValue from.ldrLimit
         to::temperature fromValue from.temperature
+        to::latitude fromValue from.latitude
+        to::longitude fromValue from.longitude
+        to::id fromValue from.busStopId
     }
 }
 
 private object DtoToModelMapper : ObjectMappie<IotConfigDto, IotConfigModel>() {
     override fun map(from: IotConfigDto) = mapping {
-        to::busStopId fromValue ""
-        to::ldrLimit fromValue 0
+        to::name fromValue from.name
+        to::busStopId fromValue from.id
+        to::ldrLimit fromValue from.light
+        to::temperature fromValue from.temperature
+        to::latitude fromValue from.latitude
+        to::longitude fromValue from.longitude
     }
 }
 

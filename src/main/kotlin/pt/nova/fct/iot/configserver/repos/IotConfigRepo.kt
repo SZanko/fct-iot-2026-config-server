@@ -8,4 +8,5 @@ import java.util.Optional
 
 @Repository
 interface IotConfigRepo: PagingAndSortingRepository<IotConfigModel, String>, CrudRepository<IotConfigModel, String> {
+    fun findByBusStopId(busStopId: String): Optional<IotConfigModel>
 }
