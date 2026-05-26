@@ -26,6 +26,7 @@
             inherit system;
             pkgs = import inputs.nixpkgs {
               inherit system;
+              config.allowUnfree = true;
               overlays = [ inputs.self.overlays.default ];
             };
           }
@@ -53,6 +54,7 @@
               ncurses
               patchelf
               zlib
+              claude-code
               self.formatter.${system}
             ];
           };
