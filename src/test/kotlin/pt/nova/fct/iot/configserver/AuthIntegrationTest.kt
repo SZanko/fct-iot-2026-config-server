@@ -43,7 +43,7 @@ class AuthIntegrationTest(
                 password = passwordEncoder.encode("secret")!!,
             )
         )
-        iotConfigRepo.save(IotConfigModel(id = "device-1", busStopId = "stop-42", ldrLimit = 512, temperature = 20, name = "test"))
+        iotConfigRepo.save(IotConfigModel(busStopId = "stop-42", ldrLimit = 512, temperature = 20, name = "test"))
     }
 
     @Test
@@ -79,7 +79,7 @@ class AuthIntegrationTest(
 
     @Test
     fun `public iot config endpoint is accessible without a token`() {
-        mockMvc.perform(get("/api/iot/device-1"))
+        mockMvc.perform(get("/api/iot/stop-42"))
             .andExpect(status().isOk())
     }
 
