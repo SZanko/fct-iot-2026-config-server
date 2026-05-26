@@ -20,6 +20,6 @@ data class IotConfigDto(
     @field:JsonProperty("temperature")
     val temperature: Int,
 
-    val latitude: Double?,
-    val longitude: Double?,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
 )
