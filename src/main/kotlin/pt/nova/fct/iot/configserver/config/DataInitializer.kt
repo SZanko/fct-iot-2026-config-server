@@ -30,13 +30,6 @@ class DataInitializer(
             logger.info("Default user '{}' already exists", DEFAULT_USERNAME)
         }
 
-        val exampleConfig = IotConfigModel(
-            busStopId = DEFAULT_BUSSTOP_ID, ldrLimit = 170,
-            temperature = 30, name = "example-config"
-        )
-        configRepo.save(exampleConfig)
-        logger.info("Example config for bus stop '020387' created")
-
         if (configRepo.findByBusStopId(ESP_BUSSTOP_ID).isEmpty) {
             configRepo.save(IotConfigModel(
                 busStopId = ESP_BUSSTOP_ID, ldrLimit = 170,
@@ -49,7 +42,6 @@ class DataInitializer(
     companion object {
         private const val DEFAULT_USERNAME = "admin"
         private const val DEFAULT_PASSWORD = "admin"
-        private const val DEFAULT_BUSSTOP_ID = "020387"
         private const val ESP_BUSSTOP_ID = "020359"
         private val logger = LoggerFactory.getLogger(DataInitializer::class.java)
     }

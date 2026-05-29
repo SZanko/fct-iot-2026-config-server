@@ -25,31 +25,33 @@ class AdminService(
 
     fun getAllStops(): List<AdminStopDto> {
         val nowSecs = Instant.now().epochSecond
-        return environmentRepo.findAll()
-            .map { env ->
-                val config = configRepo.findByBusStopId(env.busStopId).orElse(null)
-                val demo = demoRepo.findByBusStopId(env.busStopId).orElse(null)
-                val stages = buzzerStageRepo.findByBusStopIdOrderByMinutesBeforeDesc(env.busStopId).map { it.toDto() }
-                val secsAgo = nowSecs - env.updatedAt.epochSecond
-                AdminStopDto(
-                    stopId = env.busStopId,
-                    deviceName = config?.name ?: env.busStopId,
-                    temperature = env.temperature,
-                    darkOutside = env.darkOutside,
-                    isActive = secsAgo < ACTIVE_THRESHOLD_SECS,
-                    lastSeenSeconds = secsAgo,
-                    buzzerEnabled = config?.buzzerEnabled ?: false,
-                    buzzerType = config?.buzzerType ?: "single",
-                    buzzerDurationMs = config?.buzzerDurationMs ?: 200,
-                    buzzerIntervalMs = config?.buzzerIntervalMs ?: 1000,
-                    lightsEnabled = config?.lightsEnabled ?: false,
-                    ldrThreshold = config?.ldrLimit ?: 2800,
-                    fanTemperatureThreshold = config?.temperature ?: 30,
-                    demo = demo?.let { DemoArrivalDto(it.busStopId, it.lineId, it.headsign, it.arrivalUnix) },
-                    buzzerStages = stages,
-                )
-            }
-            .sortedWith(compareByDescending<AdminStopDto> { it.isActive }.thenBy { it.stopId })
+        val envByStopId = environmentRepo.findAll().associateBy { it.busStopId }
+        val stopIds = (envByStopId.keys + configRepo.findAll().map { it.busStopId }).toSet()
+
+        return stopIds.map { stopId ->
+            val env = envByStopId[stopId]
+            val config = configRepo.findByBusStopId(stopId).orElse(null)
+            val demo = demoRepo.findByBusStopId(stopId).orElse(null)
+            val stages = buzzerStageRepo.findByBusStopIdOrderByMinutesBeforeDesc(stopId).map { it.toDto() }
+            val secsAgo = env?.let { nowSecs - it.updatedAt.epochSecond } ?: -1L
+            AdminStopDto(
+                stopId = stopId,
+                deviceName = config?.name ?: stopId,
+                temperature = env?.temperature ?: 0.0,
+                darkOutside = env?.darkOutside ?: false,
+                isActive = secsAgo in 0..<ACTIVE_THRESHOLD_SECS,
+                lastSeenSeconds = secsAgo,
+                buzzerEnabled = config?.buzzerEnabled ?: false,
+                buzzerType = config?.buzzerType ?: "single",
+                buzzerDurationMs = config?.buzzerDurationMs ?: 200,
+                buzzerIntervalMs = config?.buzzerIntervalMs ?: 1000,
+                lightsEnabled = config?.lightsEnabled ?: false,
+                ldrThreshold = config?.ldrLimit ?: 2800,
+                fanTemperatureThreshold = config?.temperature ?: 30,
+                demo = demo?.let { DemoArrivalDto(it.busStopId, it.lineId, it.headsign, it.arrivalUnix) },
+                buzzerStages = stages,
+            )
+        }.sortedWith(compareByDescending<AdminStopDto> { it.isActive }.thenBy { it.stopId })
     }
 
     fun updateConfig(stopId: String, request: StopConfigRequest): AdminStopDto {
