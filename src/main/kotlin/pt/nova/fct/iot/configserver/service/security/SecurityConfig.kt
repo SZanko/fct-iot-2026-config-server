@@ -15,7 +15,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
 
 @Configuration
 @EnableWebSecurity
@@ -42,24 +41,17 @@ class SecurityConfig(
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        val paths = PathPatternRequestMatcher.withDefaults()
-
         http
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
                     .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                    .requestMatchers(
-                        paths.matcher("/swagger-ui.html"),
-                        paths.matcher("/swagger-ui/**"),
-                        paths.matcher("/v3/api-docs/**"),
-                    ).permitAll()
-                    .requestMatchers(paths.matcher("/error")).permitAll()
-                    .requestMatchers(paths.matcher(HttpMethod.GET, "/api/iot/**")).permitAll()
-                    .requestMatchers(paths.matcher(HttpMethod.POST, "/api/iot/*/environment")).permitAll()
-                    .requestMatchers(paths.matcher(HttpMethod.POST, "/api/auth/login")).permitAll()
-                    .requestMatchers(paths.matcher(HttpMethod.POST, "/api/auth/register")).permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/iot/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/iot/*/environment").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                    .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()
                     .anyRequest().authenticated()
             }
             .exceptionHandling {

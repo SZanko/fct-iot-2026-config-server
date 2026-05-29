@@ -10,7 +10,7 @@ spring:
     hibernate:
       ddl-auto: create-drop
   datasource:
-    url: ${IOT_DB_URL:jdbc:mysql://localhost:3309/iotDatabase?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}
+    url: ${IOT_DB_URL:jdbc:postgresql://localhost:5432/iotDatabase}
     username: ${IOT_DB_USERNAME:iot-user}
     password: ${IOT_DB_PASSWORD:secret}
     driver-class-name: org.postgresql.Driver
