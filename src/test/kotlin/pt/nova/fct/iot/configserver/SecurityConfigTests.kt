@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import pt.nova.fct.iot.configserver.controller.IotClientController
 import pt.nova.fct.iot.configserver.dto.IotConfigDto
+import pt.nova.fct.iot.configserver.service.IotEnvironmentService
 import pt.nova.fct.iot.configserver.service.IotService
 import pt.nova.fct.iot.configserver.service.exceptions.IotConfigNotFoundException
 import pt.nova.fct.iot.configserver.service.security.JwtService
@@ -28,6 +29,7 @@ class SecurityConfigTests(
     @Autowired private val mockMvc: MockMvc,
 ) {
     @MockitoBean private lateinit var iotService: IotService
+    @MockitoBean private lateinit var iotEnvironmentService: IotEnvironmentService
     @MockitoBean private lateinit var jwtService: JwtService
     @MockitoBean private lateinit var userDetailsService: UserDetailsServiceImpl
 
@@ -67,6 +69,17 @@ class SecurityConfigTests(
                 .content("""{"id":"2"}"""),
         )
             .andExpect(status().isUnauthorized())
+            .andExpect(header().doesNotExist(HttpHeaders.WWW_AUTHENTICATE))
+    }
+
+    @Test
+    fun `esp environment posts are public and do not send a basic challenge`() {
+        mockMvc.perform(
+            post("/api/iot/2/environment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"temperature":19.5,"darkOutside":true}"""),
+        )
+            .andExpect(status().isOk())
             .andExpect(header().doesNotExist(HttpHeaders.WWW_AUTHENTICATE))
     }
 }

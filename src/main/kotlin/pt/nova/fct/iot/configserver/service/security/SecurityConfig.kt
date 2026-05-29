@@ -57,6 +57,7 @@ class SecurityConfig(
                     ).permitAll()
                     .requestMatchers(paths.matcher("/error")).permitAll()
                     .requestMatchers(paths.matcher(HttpMethod.GET, "/api/iot/**")).permitAll()
+                    .requestMatchers(paths.matcher(HttpMethod.POST, "/api/iot/*/environment")).permitAll()
                     .requestMatchers(paths.matcher(HttpMethod.POST, "/api/auth/login")).permitAll()
                     .requestMatchers(paths.matcher(HttpMethod.POST, "/api/auth/register")).permitAll()
                     .anyRequest().authenticated()

@@ -18,8 +18,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import pt.nova.fct.iot.configserver.dto.LoginRequest
 import pt.nova.fct.iot.configserver.dto.RegisterRequest
 import pt.nova.fct.iot.configserver.models.IotConfigModel
+import pt.nova.fct.iot.configserver.models.IotEnvironmentModel
 import pt.nova.fct.iot.configserver.models.UserModel
 import pt.nova.fct.iot.configserver.repos.IotConfigRepo
+import pt.nova.fct.iot.configserver.repos.IotEnvironmentRepo
 import pt.nova.fct.iot.configserver.repos.UserRepo
 
 @SpringBootTest
@@ -29,12 +31,14 @@ class AuthIntegrationTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val userRepo: UserRepo,
     @Autowired private val iotConfigRepo: IotConfigRepo,
+    @Autowired private val iotEnvironmentRepo: IotEnvironmentRepo,
     @Autowired private val passwordEncoder: PasswordEncoder,
 ) {
     private val objectMapper = ObjectMapper().findAndRegisterModules()
 
     @BeforeEach
     fun setup() {
+        iotEnvironmentRepo.deleteAll()
         userRepo.deleteAll()
         iotConfigRepo.deleteAll()
         userRepo.save(
@@ -44,6 +48,7 @@ class AuthIntegrationTest(
             )
         )
         iotConfigRepo.save(IotConfigModel(busStopId = "stop-42", ldrLimit = 512, temperature = 20, name = "test"))
+        iotEnvironmentRepo.save(IotEnvironmentModel(busStopId = "stop-42", temperature = 18.5, darkOutside = true))
     }
 
     @Test
@@ -81,6 +86,68 @@ class AuthIntegrationTest(
     fun `public iot config endpoint is accessible without a token`() {
         mockMvc.perform(get("/api/iot/stop-42"))
             .andExpect(status().isOk())
+    }
+
+    @Test
+    fun `public environment endpoint returns latest reading without a token`() {
+        mockMvc.perform(get("/api/iot/stop-42/environment"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value("stop-42"))
+            .andExpect(jsonPath("$.temperature").value(18.5))
+            .andExpect(jsonPath("$.darkOutside").value(true))
+            .andExpect(jsonPath("$.updatedAt").isNotEmpty())
+    }
+
+    @Test
+    fun `missing environment reading returns not found`() {
+        mockMvc.perform(get("/api/iot/unknown-stop/environment"))
+            .andExpect(status().isNotFound())
+    }
+
+    @Test
+    fun `esp can post environment reading without a token`() {
+        mockMvc.perform(
+            post("/api/iot/stop-99/environment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(mapOf("temperature" to 23.75, "darkOutside" to false)))
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value("stop-99"))
+            .andExpect(jsonPath("$.temperature").value(23.75))
+            .andExpect(jsonPath("$.darkOutside").value(false))
+
+        mockMvc.perform(get("/api/iot/stop-99/environment"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.temperature").value(23.75))
+            .andExpect(jsonPath("$.darkOutside").value(false))
+    }
+
+    @Test
+    fun `environment post updates the latest reading for the bus stop`() {
+        mockMvc.perform(
+            post("/api/iot/stop-42/environment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(mapOf("temperature" to 21.25, "darkOutside" to false)))
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value("stop-42"))
+            .andExpect(jsonPath("$.temperature").value(21.25))
+            .andExpect(jsonPath("$.darkOutside").value(false))
+
+        mockMvc.perform(get("/api/iot/stop-42/environment"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.temperature").value(21.25))
+            .andExpect(jsonPath("$.darkOutside").value(false))
+    }
+
+    @Test
+    fun `environment post with invalid payload returns bad request`() {
+        mockMvc.perform(
+            post("/api/iot/stop-42/environment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(mapOf("temperature" to 100.0, "darkOutside" to true)))
+        )
+            .andExpect(status().isBadRequest())
     }
 
     @Test
