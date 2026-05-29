@@ -51,7 +51,7 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.POST, "/api/iot/*/environment").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                    .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()
+                    .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/error", "/", "/index.html").permitAll()
                     .anyRequest().authenticated()
             }
             .exceptionHandling {

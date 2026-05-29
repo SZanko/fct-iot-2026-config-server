@@ -36,12 +36,21 @@ class DataInitializer(
         )
         configRepo.save(exampleConfig)
         logger.info("Example config for bus stop '020387' created")
+
+        if (configRepo.findByBusStopId(ESP_BUSSTOP_ID).isEmpty) {
+            configRepo.save(IotConfigModel(
+                busStopId = ESP_BUSSTOP_ID, ldrLimit = 170,
+                temperature = 30, name = "MTE CAPARICA R ALFREDO CUNHA (ESCOLA)"
+            ))
+            logger.info("Default config for ESP32 bus stop '{}' created", ESP_BUSSTOP_ID)
+        }
     }
 
     companion object {
         private const val DEFAULT_USERNAME = "admin"
         private const val DEFAULT_PASSWORD = "admin"
         private const val DEFAULT_BUSSTOP_ID = "020387"
+        private const val ESP_BUSSTOP_ID = "020359"
         private val logger = LoggerFactory.getLogger(DataInitializer::class.java)
     }
 }

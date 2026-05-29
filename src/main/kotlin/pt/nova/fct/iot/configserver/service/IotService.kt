@@ -3,8 +3,10 @@ package pt.nova.fct.iot.configserver.service
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import pt.nova.fct.iot.configserver.dto.BuzzerStageDto
 import pt.nova.fct.iot.configserver.dto.IotConfigDto
 import pt.nova.fct.iot.configserver.mapper.IotConfigMapper
+import pt.nova.fct.iot.configserver.repos.BuzzerStageRepo
 import pt.nova.fct.iot.configserver.repos.IotConfigRepo
 import pt.nova.fct.iot.configserver.service.exceptions.IotConfigNotFoundException
 
@@ -12,6 +14,7 @@ import pt.nova.fct.iot.configserver.service.exceptions.IotConfigNotFoundExceptio
 class IotService(
     private val configRepo: IotConfigRepo,
     private val configMapper: IotConfigMapper,
+    private val buzzerStageRepo: BuzzerStageRepo,
 ) {
 
     companion object {
@@ -26,7 +29,10 @@ class IotService(
             throw IotConfigNotFoundException()
         }
 
-        return configMapper.toDto(result.get())
+        val stages = buzzerStageRepo.findByBusStopIdOrderByMinutesBeforeDesc(id)
+            .map { BuzzerStageDto(id = it.id, minutesBefore = it.minutesBefore, buzzerType = it.buzzerType, buzzerDurationMs = it.buzzerDurationMs) }
+
+        return configMapper.toDto(result.get()).copy(buzzerStages = stages)
     }
 
     fun createNewConfig(config: IotConfigDto): IotConfigDto {

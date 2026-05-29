@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT Bus Stop Admin</title>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --border: #2e3248;
+    --primary: #5b8ef0; --primary-dim: #3a5db0;
+    --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+    --text: #e8eaf0; --muted: #7a809a; --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* LOGIN */
+  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+  .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; width: 100%; max-width: 380px; }
+  .login-card h1 { font-size: 1.5rem; margin-bottom: 8px; }
+  .login-card p { color: var(--muted); font-size: .875rem; margin-bottom: 28px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: .8rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+  .field input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: .95rem; outline: none; transition: border-color .15s; }
+  .field input:focus { border-color: var(--primary); }
+  .btn-full { width: 100%; padding: 11px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+  .btn-full:hover { background: var(--primary-dim); }
+  .btn-full:disabled { opacity: .5; cursor: not-allowed; }
+  .error-msg { color: var(--red); font-size: .85rem; margin-top: 12px; text-align: center; min-height: 1.2em; }
+
+  /* DASHBOARD */
+  #dashboard { display: none; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  header h1 { font-size: 1.1rem; font-weight: 700; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .header-right span { font-size: .85rem; color: var(--muted); }
+  .btn { padding: 6px 14px; font-size: .82rem; font-weight: 600; border-radius: 7px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text); transition: background .15s; white-space: nowrap; }
+  .btn:hover { background: var(--border); }
+  .btn.danger { border-color: var(--red); color: var(--red); }
+  .btn.danger:hover { background: rgba(239,68,68,.1); }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn.primary:hover { background: var(--primary-dim); }
+  .btn.success { background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.4); color: var(--green); }
+
+  main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
+  .toolbar h2 { font-size: 1rem; font-weight: 600; color: var(--muted); }
+  .stops-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); gap: 16px; }
+
+  /* STOP CARD */
+  .stop-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .stop-card.active-card { border-color: rgba(91,142,240,.35); }
+  .card-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+  .card-header:hover { background: rgba(255,255,255,.02); }
+  .card-title .stop-id { font-size: 1rem; font-weight: 700; }
+  .card-title .device-name { font-size: .8rem; color: var(--muted); }
+  .card-badges { display: flex; align-items: center; gap: 8px; }
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+  .badge.active { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+  .badge.inactive { background: rgba(122,128,154,.15); color: var(--muted); border: 1px solid var(--border); }
+  .chevron { color: var(--muted); font-size: .75rem; transition: transform .2s; }
+  .chevron.open { transform: rotate(180deg); }
+
+  .card-sensor { display: flex; gap: 16px; padding: 10px 20px; border-bottom: 1px solid var(--border); background: var(--surface2); flex-wrap: wrap; }
+  .sensor-item { display: flex; flex-direction: column; gap: 1px; }
+  .sensor-item .s-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .sensor-item .s-value { font-size: .9rem; font-weight: 600; }
+  .last-seen-txt { font-size: .8rem; color: var(--muted); margin-left: auto; align-self: center; }
+
+  .card-body { padding: 20px; display: none; }
+  .card-body.open { display: block; }
+
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+  .form-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .form-row label { font-size: .85rem; color: var(--muted); min-width: 120px; }
+  .form-row input[type=number], .form-row select { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 7px 10px; color: var(--text); font-size: .875rem; outline: none; width: 120px; }
+  .form-row input[type=number]:focus, .form-row select:focus { border-color: var(--primary); }
+  select option { background: var(--surface2); }
+
+  .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 24px; cursor: pointer; transition: background .2s; }
+  .toggle-slider:before { content: ''; position: absolute; width: 18px; height: 18px; left: 2px; top: 2px; background: var(--muted); border-radius: 50%; transition: transform .2s, background .2s; }
+  .toggle input:checked + .toggle-slider { background: rgba(91,142,240,.25); border-color: var(--primary); }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(20px); background: var(--primary); }
+
+  .save-row { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 12px; }
+  .saved-ok { font-size: .8rem; color: var(--green); display: none; }
+  .saved-ok.show { display: inline; }
+
+  /* STAGES TABLE */
+  .stages-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+  .stages-table th { font-size: .7rem; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+  .stages-table td { padding: 6px 8px; font-size: .875rem; border-bottom: 1px solid rgba(46,50,72,.5); }
+  .stages-table tr:last-child td { border-bottom: none; }
+  .stages-empty { font-size: .85rem; color: var(--muted); margin-bottom: 10px; }
+
+  .add-stage-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-top: 8px; }
+  .add-stage-row .sf { display: flex; flex-direction: column; gap: 4px; }
+  .add-stage-row .sf label { font-size: .72rem; color: var(--muted); }
+  .add-stage-row input, .add-stage-row select { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; color: var(--text); font-size: .85rem; outline: none; }
+  .add-stage-row input:focus, .add-stage-row select:focus { border-color: var(--primary); }
+  .add-stage-row input[type=number] { width: 70px; }
+
+  /* DEMO */
+  .demo-current { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .demo-info .demo-line { font-size: .9rem; font-weight: 700; }
+  .demo-info .demo-dest { font-size: .8rem; color: var(--muted); }
+  .demo-timer { font-size: 1rem; font-weight: 700; color: var(--primary); min-width: 64px; text-align: right; }
+  .demo-none { font-size: .85rem; color: var(--muted); margin-bottom: 10px; }
+  .demo-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+  .demo-form .df { display: flex; flex-direction: column; gap: 4px; }
+  .demo-form .df label { font-size: .72rem; color: var(--muted); }
+  .demo-form input { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; color: var(--text); font-size: .85rem; outline: none; }
+  .demo-form input:focus { border-color: var(--primary); }
+  .demo-form input[type=number] { width: 70px; }
+
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+
+  @media (max-width: 600px) { .stops-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <h1>IoT Admin</h1>
+    <p>Bus Stop Control Panel</p>
+    <div class="field"><label>Username</label><input type="text" id="lu" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input type="password" id="lp" autocomplete="current-password"></div>
+    <button class="btn-full" id="login-btn" onclick="login()">Sign In</button>
+    <div class="error-msg" id="lerr"></div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <header>
+    <h1>IoT Admin</h1>
+    <div class="header-right">
+      <span id="huser"></span>
+      <button class="btn" onclick="silentRefresh()">↻ Refresh</button>
+      <button class="btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+  <main>
+    <div class="toolbar">
+      <h2 id="summary">Loading…</h2>
+    </div>
+    <div class="stops-grid" id="grid"></div>
+  </main>
+</div>
+
+<script>
+let token = localStorage.getItem('iot_token');
+let user  = localStorage.getItem('iot_user') || '';
+let stopsData = [];
+let demoTimers = {};
+
+if (token) showDashboard();
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+async function login() {
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('lerr');
+  err.textContent = '';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username: document.getElementById('lu').value.trim(), password: document.getElementById('lp').value}),
+    });
+    if (!res.ok) { err.textContent = 'Invalid credentials.'; return; }
+    const d = await res.json();
+    token = d.token; user = document.getElementById('lu').value.trim();
+    localStorage.setItem('iot_token', token); localStorage.setItem('iot_user', user);
+    showDashboard();
+  } catch(e) { err.textContent = 'Connection error.'; }
+  finally { btn.disabled = false; btn.innerHTML = 'Sign In'; }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') login(); });
+
+function logout() {
+  token = null; localStorage.removeItem('iot_token'); localStorage.removeItem('iot_user');
+  clearAllTimers();
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function showDashboard() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('huser').textContent = user;
+  loadStops();
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const res = await fetch(path, {
+    method, headers: {'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 401) { logout(); return null; }
+  if (res.status === 204) return null;
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ── FULL LOAD (first time) ────────────────────────────────────────────────────
+async function loadStops() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '<div style="color:var(--muted);padding:20px">Loading…</div>';
+  clearAllTimers();
+  try {
+    stopsData = await api('GET', '/api/admin/stops') || [];
+    renderAllCards();
+  } catch(e) {
+    grid.innerHTML = `<div class="empty-state"><p>Could not load stops: ${e.message}</p></div>`;
+  }
+}
+
+function renderAllCards() {
+  const grid = document.getElementById('grid');
+  const active = stopsData.filter(s => s.isActive).length;
+  document.getElementById('summary').textContent = `${stopsData.length} stops · ${active} active`;
+  if (!stopsData.length) {
+    grid.innerHTML = '<div class="empty-state"><p>No stops have reported yet. Waiting for ESP32…</p></div>'; return;
+  }
+  grid.innerHTML = stopsData.map(s => cardHtml(s)).join('');
+  stopsData.forEach(s => startDemoTimer(s.stopId, s.demo));
+}
+
+// ── SILENT REFRESH (only updates sensor/status, never touches form inputs) ────
+async function silentRefresh() {
+  try {
+    const fresh = await api('GET', '/api/admin/stops') || [];
+    const active = fresh.filter(s => s.isActive).length;
+    document.getElementById('summary').textContent = `${fresh.length} stops · ${active} active`;
+
+    fresh.forEach(s => {
+      // Update status badge
+      const badge = document.getElementById(`badge-${s.stopId}`);
+      if (badge) { badge.textContent = s.isActive ? 'ACTIVE' : 'INACTIVE'; badge.className = `badge ${s.isActive ? 'active' : 'inactive'}`; }
+      // Update sensor row
+      const temp = document.getElementById(`s-temp-${s.stopId}`);
+      if (temp) temp.textContent = `${s.temperature.toFixed(1)}°C`;
+      const light = document.getElementById(`s-light-${s.stopId}`);
+      if (light) { light.textContent = s.darkOutside ? 'Dark' : 'Bright'; light.style.color = s.darkOutside ? 'var(--muted)' : 'var(--yellow)'; }
+      const seen = document.getElementById(`s-seen-${s.stopId}`);
+      if (seen) seen.textContent = fmtSeen(s.lastSeenSeconds);
+      // Update demo timer data
+      const idx = stopsData.findIndex(x => x.stopId === s.stopId);
+      if (idx >= 0) {
+        if (JSON.stringify(stopsData[idx].demo) !== JSON.stringify(s.demo)) {
+          stopsData[idx].demo = s.demo;
+          refreshDemoSection(s.stopId, s.demo);
+          startDemoTimer(s.stopId, s.demo);
+        }
+        // Update stages list in-place (doesn't affect form inputs)
+        stopsData[idx].buzzerStages = s.buzzerStages;
+        renderStagesList(s.stopId, s.buzzerStages);
+      }
+    });
+    stopsData = fresh;
+  } catch(e) { /* silent */ }
+}
+
+// ── CARD HTML ─────────────────────────────────────────────────────────────────
+function cardHtml(s) {
+  const lastSeen = fmtSeen(s.lastSeenSeconds);
+  const demoSection = demoHtml(s.stopId, s.demo);
+  return `
+  <div class="stop-card ${s.isActive ? 'active-card' : ''}" id="card-${s.stopId}">
+    <div class="card-header" onclick="toggleCard('${s.stopId}')">
+      <div class="card-title">
+        <div class="stop-id">Stop ${esc(s.stopId)}</div>
+        <div class="device-name">${esc(s.deviceName)}</div>
+      </div>
+      <div class="card-badges">
+        <span class="badge ${s.isActive?'active':'inactive'}" id="badge-${s.stopId}">${s.isActive?'ACTIVE':'INACTIVE'}</span>
+        <span class="chevron" id="chev-${s.stopId}">▼</span>
+      </div>
+    </div>
+    <div class="card-sensor">
+      <div class="sensor-item"><span class="s-label">Temp</span><span class="s-value" id="s-temp-${s.stopId}">${s.temperature.toFixed(1)}°C</span></div>
+      <div class="sensor-item"><span class="s-label">Light</span><span class="s-value" id="s-light-${s.stopId}" style="color:${s.darkOutside?'var(--muted)':'var(--yellow)'}">${s.darkOutside?'Dark':'Bright'}</span></div>
+      <span class="last-seen-txt" id="s-seen-${s.stopId}">${lastSeen}</span>
+    </div>
+    <div class="card-body" id="body-${s.stopId}">
+
+      <div class="section">
+        <div class="section-title">Buzzer — Arrival Alert Stages</div>
+        <div id="stages-${s.stopId}">${stagesHtml(s.stopId, s.buzzerStages)}</div>
+        <div class="add-stage-row">
+          <div class="sf"><label>Min away</label><input type="number" id="sm-${s.stopId}" value="3" min="0" max="60" style="width:70px"></div>
+          <div class="sf"><label>Pattern</label><select id="st-${s.stopId}">${typeOptions('single')}</select></div>
+          <div class="sf"><label>Duration (ms)</label><input type="number" id="sd-${s.stopId}" value="200" min="50" max="5000" step="50" style="width:80px"></div>
+          <div class="sf"><label>&nbsp;</label><button class="btn primary" onclick="addStage('${s.stopId}')">+ Add Stage</button></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Lights</div>
+        <div class="form-row"><label>Force lights on</label>
+          <label class="toggle"><input type="checkbox" id="li-${s.stopId}" ${s.lightsEnabled?'checked':''}><span class="toggle-slider"></span></label>
+        </div>
+        <div class="form-row"><label>Dark threshold</label>
+          <input type="number" id="ldr-${s.stopId}" value="${s.ldrThreshold}" min="0" max="4095" step="10">
+          <span style="color:var(--muted);font-size:.8rem">ADC raw (0–4095)</span>
+        </div>
+      </div>
+
+      <div class="save-row">
+        <span class="saved-ok" id="sok-${s.stopId}">✓ Saved</span>
+        <button class="btn primary" onclick="saveConfig('${s.stopId}')">Save Config</button>
+      </div>
+
+      <div class="section" style="margin-top:20px">
+        <div class="section-title">Demo Bus</div>
+        <div id="demo-wrap-${s.stopId}">${demoSection}</div>
+        <div class="demo-form">
+          <div class="df"><label>Line ID</label><input type="text" id="dl-${s.stopId}" value="${s.demo?esc(s.demo.lineId):'DEMO'}" style="width:80px"></div>
+          <div class="df"><label>Destination</label><input type="text" id="dh-${s.stopId}" value="${s.demo?esc(s.demo.headsign):'Demo Bus'}" style="width:160px"></div>
+          <div class="df"><label>Minutes away</label><input type="number" id="dm-${s.stopId}" value="5" min="0" max="120" style="width:70px"></div>
+          <div class="df"><label>&nbsp;</label><button class="btn primary" onclick="setDemo('${s.stopId}')">Set Demo</button></div>
+        </div>
+      </div>
+
+    </div>
+  </div>`;
+}
+
+function typeOptions(selected) {
+  return ['single','double','triple','sos','continuous'].map(t =>
+    `<option value="${t}" ${selected===t?'selected':''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`
+  ).join('');
+}
+
+function stagesHtml(stopId, stages) {
+  if (!stages || !stages.length) return `<div class="stages-empty">No stages configured — using hardcoded defaults (5/4/3/2/1 min).</div>`;
+  return `<table class="stages-table">
+    <thead><tr><th>Min away</th><th>Pattern</th><th>Duration</th><th></th></tr></thead>
+    <tbody>${stages.map(s => `<tr>
+      <td>${s.minutesBefore === 0 ? 'Arrival' : s.minutesBefore + ' min'}</td>
+      <td>${esc(s.buzzerType)}</td>
+      <td>${s.buzzerDurationMs} ms</td>
+      <td><button class="btn danger" style="padding:3px 8px;font-size:.75rem" onclick="deleteStage('${stopId}','${s.id}')">✕</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function renderStagesList(stopId, stages) {
+  const el = document.getElementById(`stages-${stopId}`);
+  if (el) el.innerHTML = stagesHtml(stopId, stages);
+}
+
+// ── CARD TOGGLE ───────────────────────────────────────────────────────────────
+function toggleCard(stopId) {
+  const body  = document.getElementById(`body-${stopId}`);
+  const chev  = document.getElementById(`chev-${stopId}`);
+  const open  = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+}
+
+// ── SAVE CONFIG ───────────────────────────────────────────────────────────────
+async function saveConfig(stopId) {
+  const body = {
+    buzzerEnabled: false,
+    buzzerType: 'single',
+    buzzerDurationMs: 200,
+    buzzerIntervalMs: 1000,
+    lightsEnabled: document.getElementById(`li-${stopId}`).checked,
+    ldrThreshold: parseInt(document.getElementById(`ldr-${stopId}`).value) || 0,
+  };
+  try {
+    await api('PUT', `/api/admin/stops/${stopId}/config`, body);
+    const m = document.getElementById(`sok-${stopId}`);
+    m.classList.add('show'); setTimeout(() => m.classList.remove('show'), 2000);
+  } catch(e) { alert(`Save failed: ${e.message}`); }
+}
+
+// ── STAGES ────────────────────────────────────────────────────────────────────
+async function addStage(stopId) {
+  const mins = parseInt(document.getElementById(`sm-${stopId}`).value);
+  const type = document.getElementById(`st-${stopId}`).value;
+  const dur  = parseInt(document.getElementById(`sd-${stopId}`).value);
+  try {
+    const stage = await api('POST', `/api/admin/stops/${stopId}/stages`, {minutesBefore: mins, buzzerType: type, buzzerDurationMs: dur});
+    const idx = stopsData.findIndex(s => s.stopId === stopId);
+    if (idx >= 0) {
+      stopsData[idx].buzzerStages = [...(stopsData[idx].buzzerStages || []), stage]
+        .sort((a, b) => b.minutesBefore - a.minutesBefore);
+      renderStagesList(stopId, stopsData[idx].buzzerStages);
+    }
+  } catch(e) { alert(`Failed: ${e.message}`); }
+}
+
+async function deleteStage(stopId, stageId) {
+  try {
+    await api('DELETE', `/api/admin/stages/${stageId}`);
+    const idx = stopsData.findIndex(s => s.stopId === stopId);
+    if (idx >= 0) {
+      stopsData[idx].buzzerStages = stopsData[idx].buzzerStages.filter(s => s.id !== stageId);
+      renderStagesList(stopId, stopsData[idx].buzzerStages);
+    }
+  } catch(e) { alert(`Failed: ${e.message}`); }
+}
+
+// ── DEMO BUS ──────────────────────────────────────────────────────────────────
+function demoHtml(stopId, demo) {
+  if (!demo) return `<div class="demo-none" id="demo-none-${stopId}">No demo bus set.</div>`;
+  return `<div class="demo-current" id="demo-current-${stopId}">
+    <div class="demo-info">
+      <div class="demo-line">${esc(demo.lineId)}</div>
+      <div class="demo-dest">${esc(demo.headsign)}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+      <span class="demo-timer" id="dtimer-${stopId}">…</span>
+      <button class="btn danger" onclick="deleteDemo('${stopId}')">Remove</button>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+    <span style="font-size:.8rem;color:var(--muted)">Adjust:</span>
+    <input type="number" id="dadj-${stopId}" value="5" min="1" max="999"
+      style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:.85rem;outline:none">
+    <span style="font-size:.8rem;color:var(--muted)">min</span>
+    <button class="btn" onclick="adjustDemo('${stopId}',-1)">◀ Advance</button>
+    <button class="btn" onclick="adjustDemo('${stopId}',1)">Delay ▶</button>
+  </div>`;
+}
+
+function refreshDemoSection(stopId, demo) {
+  const wrap = document.getElementById(`demo-wrap-${stopId}`);
+  if (wrap) wrap.innerHTML = demoHtml(stopId, demo);
+}
+
+async function adjustDemo(stopId, sign) {
+  const mins = parseInt(document.getElementById(`dadj-${stopId}`)?.value) || 5;
+  const deltaMinutes = sign * mins;
+  try {
+    const demo = await api('PATCH', `/api/iot/${stopId}/demo/adjust`, {deltaMinutes});
+    const idx = stopsData.findIndex(s => s.stopId === stopId);
+    if (idx >= 0) stopsData[idx].demo = demo;
+    refreshDemoSection(stopId, demo);
+    startDemoTimer(stopId, demo);
+  } catch(e) { alert(`Failed: ${e.message}`); }
+}
+
+async function setDemo(stopId) {
+  const lineId = document.getElementById(`dl-${stopId}`).value.trim() || 'DEMO';
+  const headsign = document.getElementById(`dh-${stopId}`).value.trim() || 'Demo Bus';
+  const minutesAway = parseInt(document.getElementById(`dm-${stopId}`).value) || 5;
+  try {
+    const demo = await api('PUT', `/api/iot/${stopId}/demo`, {lineId, headsign, minutesAway});
+    const idx = stopsData.findIndex(s => s.stopId === stopId);
+    if (idx >= 0) stopsData[idx].demo = demo;
+    refreshDemoSection(stopId, demo);
+    startDemoTimer(stopId, demo);
+  } catch(e) { alert(`Failed: ${e.message}`); }
+}
+
+async function deleteDemo(stopId) {
+  try {
+    await api('DELETE', `/api/iot/${stopId}/demo`);
+    const idx = stopsData.findIndex(s => s.stopId === stopId);
+    if (idx >= 0) stopsData[idx].demo = null;
+    refreshDemoSection(stopId, null);
+    stopDemoTimer(stopId);
+  } catch(e) { alert(`Failed: ${e.message}`); }
+}
+
+// ── DEMO TIMER ────────────────────────────────────────────────────────────────
+function startDemoTimer(stopId, demo) {
+  stopDemoTimer(stopId);
+  if (!demo) return;
+  function tick() {
+    const el = document.getElementById(`dtimer-${stopId}`);
+    if (!el) { stopDemoTimer(stopId); return; }
+    const secs = demo.arrivalUnix - Math.floor(Date.now() / 1000);
+    if (secs <= 0) { el.textContent = 'Due'; el.style.color = 'var(--red)'; }
+    else if (secs < 60) { el.textContent = `${secs}s`; el.style.color = 'var(--yellow)'; }
+    else { el.textContent = `${Math.floor(secs/60)}m ${String(secs%60).padStart(2,'0')}s`; el.style.color = 'var(--primary)'; }
+  }
+  tick();
+  demoTimers[stopId] = setInterval(tick, 1000);
+}
+function stopDemoTimer(stopId) { if (demoTimers[stopId]) { clearInterval(demoTimers[stopId]); delete demoTimers[stopId]; } }
+function clearAllTimers() { Object.keys(demoTimers).forEach(stopDemoTimer); }
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function fmtSeen(s) {
+  if (s < 0) return 'never';
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  return `${Math.floor(s/3600)}h ago`;
+}
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

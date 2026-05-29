@@ -14,6 +14,12 @@ private object ModelToDtoMapper : ObjectMappie<IotConfigModel, IotConfigDto>() {
         to::latitude fromValue from.latitude
         to::longitude fromValue from.longitude
         to::id fromValue from.busStopId
+        to::buzzerEnabled fromValue from.buzzerEnabled
+        to::buzzerType fromValue from.buzzerType
+        to::buzzerDurationMs fromValue from.buzzerDurationMs
+        to::buzzerIntervalMs fromValue from.buzzerIntervalMs
+        to::lightsEnabled fromValue from.lightsEnabled
+        to::buzzerStages fromValue emptyList()
     }
 }
 
@@ -25,6 +31,11 @@ private object DtoToModelMapper : ObjectMappie<IotConfigDto, IotConfigModel>() {
         to::temperature fromValue from.temperature
         to::latitude fromValue from.latitude
         to::longitude fromValue from.longitude
+        to::buzzerEnabled fromValue from.buzzerEnabled
+        to::buzzerType fromValue from.buzzerType
+        to::buzzerDurationMs fromValue from.buzzerDurationMs
+        to::buzzerIntervalMs fromValue from.buzzerIntervalMs
+        to::lightsEnabled fromValue from.lightsEnabled
     }
 }
 
