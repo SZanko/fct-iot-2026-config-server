@@ -17,6 +17,7 @@ data class AdminStopDto(
     @field:JsonProperty("buzzerIntervalMs") val buzzerIntervalMs: Int,
     @field:JsonProperty("lightsEnabled") val lightsEnabled: Boolean,
     @field:JsonProperty("ldrThreshold") val ldrThreshold: Int,
+    @field:JsonProperty("fanTemperatureThreshold") val fanTemperatureThreshold: Int,
     @field:JsonProperty("demo") val demo: DemoArrivalDto?,
     @field:JsonProperty("buzzerStages") val buzzerStages: List<BuzzerStageDto> = emptyList(),
 )
@@ -32,4 +33,6 @@ data class StopConfigRequest(
     @field:JsonProperty("lightsEnabled") val lightsEnabled: Boolean,
     @field:Min(0) @field:jakarta.validation.constraints.Max(4095)
     @field:JsonProperty("ldrThreshold") val ldrThreshold: Int,
+    @field:Min(-20) @field:jakarta.validation.constraints.Max(60)
+    @field:JsonProperty("fanTemperatureThreshold") val fanTemperatureThreshold: Int,
 )

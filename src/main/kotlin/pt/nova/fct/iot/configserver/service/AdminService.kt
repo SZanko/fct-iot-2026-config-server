@@ -44,6 +44,7 @@ class AdminService(
                     buzzerIntervalMs = config?.buzzerIntervalMs ?: 1000,
                     lightsEnabled = config?.lightsEnabled ?: false,
                     ldrThreshold = config?.ldrLimit ?: 2800,
+                    fanTemperatureThreshold = config?.temperature ?: 30,
                     demo = demo?.let { DemoArrivalDto(it.busStopId, it.lineId, it.headsign, it.arrivalUnix) },
                     buzzerStages = stages,
                 )
@@ -61,6 +62,7 @@ class AdminService(
         config.buzzerIntervalMs = request.buzzerIntervalMs
         config.lightsEnabled = request.lightsEnabled
         config.ldrLimit = request.ldrThreshold
+        config.temperature = request.fanTemperatureThreshold
         configRepo.save(config)
 
         val nowSecs = Instant.now().epochSecond
@@ -81,6 +83,7 @@ class AdminService(
             buzzerIntervalMs = config.buzzerIntervalMs,
             lightsEnabled = config.lightsEnabled,
             ldrThreshold = config.ldrLimit,
+            fanTemperatureThreshold = config.temperature,
             demo = demo?.let { DemoArrivalDto(it.busStopId, it.lineId, it.headsign, it.arrivalUnix) },
             buzzerStages = stages,
         )
