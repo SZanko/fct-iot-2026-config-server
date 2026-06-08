@@ -30,6 +30,9 @@ data class DemoArrivalDto(
     @field:JsonProperty("headsign")
     val headsign: String,
 
+    @field:JsonProperty("scheduledArrivalUnix")
+    val scheduledArrivalUnix: Long,
+
     @field:JsonProperty("arrivalUnix")
     val arrivalUnix: Long,
 )

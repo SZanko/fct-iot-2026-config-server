@@ -22,11 +22,13 @@ class DemoArrivalService(private val repo: DemoArrivalRepo) {
         val model = repo.findByBusStopId(busStopId).orElse(null)?.also {
             it.lineId = request.lineId
             it.headsign = request.headsign
+            it.scheduledArrivalUnix = arrivalUnix  // reset scheduled anchor on (re)creation
             it.arrivalUnix = arrivalUnix
         } ?: DemoArrivalModel(
             busStopId = busStopId,
             lineId = request.lineId,
             headsign = request.headsign,
+            scheduledArrivalUnix = arrivalUnix,
             arrivalUnix = arrivalUnix,
         )
         return repo.save(model).toDto()
@@ -35,7 +37,7 @@ class DemoArrivalService(private val repo: DemoArrivalRepo) {
     fun adjustDemoArrival(busStopId: String, request: DemoArrivalAdjustRequest): DemoArrivalDto {
         val model = repo.findByBusStopId(busStopId)
             .orElseThrow { DemoArrivalNotFoundException() }
-        model.arrivalUnix += request.deltaMinutes * 60L
+        model.arrivalUnix += request.deltaMinutes * 60L  // only estimated changes, not scheduled
         return repo.save(model).toDto()
     }
 
@@ -49,6 +51,7 @@ class DemoArrivalService(private val repo: DemoArrivalRepo) {
         busStopId = busStopId,
         lineId = lineId,
         headsign = headsign,
+        scheduledArrivalUnix = scheduledArrivalUnix,
         arrivalUnix = arrivalUnix,
     )
 }

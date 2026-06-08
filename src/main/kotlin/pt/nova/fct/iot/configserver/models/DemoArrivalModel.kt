@@ -23,7 +23,11 @@ class DemoArrivalModel(
     @field:Column(nullable = false)
     var headsign: String,
 
-    // absolute Unix timestamp when the demo bus arrives (computed from minutesAway at PUT time)
+    // Original scheduled arrival set at creation — never changes (used as stable alarm key)
+    @field:Column(nullable = false)
+    var scheduledArrivalUnix: Long,
+
+    // Current estimated arrival — updated on every adjust call
     @field:Column(nullable = false)
     var arrivalUnix: Long,
 )

@@ -48,7 +48,7 @@ class AdminService(
                 lightsEnabled = config?.lightsEnabled ?: false,
                 ldrThreshold = config?.ldrLimit ?: 2800,
                 fanTemperatureThreshold = config?.temperature ?: 30,
-                demo = demo?.let { DemoArrivalDto(it.busStopId, it.lineId, it.headsign, it.arrivalUnix) },
+                demo = demo?.let { DemoArrivalDto(it.busStopId, it.lineId, it.headsign, it.scheduledArrivalUnix, it.arrivalUnix) },
                 buzzerStages = stages,
             )
         }.sortedWith(compareByDescending<AdminStopDto> { it.isActive }.thenBy { it.stopId })
@@ -86,7 +86,7 @@ class AdminService(
             lightsEnabled = config.lightsEnabled,
             ldrThreshold = config.ldrLimit,
             fanTemperatureThreshold = config.temperature,
-            demo = demo?.let { DemoArrivalDto(it.busStopId, it.lineId, it.headsign, it.arrivalUnix) },
+            demo = demo?.let { DemoArrivalDto(it.busStopId, it.lineId, it.headsign, it.scheduledArrivalUnix, it.arrivalUnix) },
             buzzerStages = stages,
         )
     }
